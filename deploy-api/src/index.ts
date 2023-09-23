@@ -13,41 +13,48 @@ const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 app.use(express.json());
 
 app.post("/rollout/restart", async (req, res) => {
-  const secret = req.headers.authorization;
-  if (secret !== process.env.SECRET) {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
-  }
+  try {
+    const secret = req.headers.authorization;
+    if (secret !== process.env.SECRET) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
 
-  const deploymentName = req.body.deploymentName;
-  const namespace = req.body.namespace;
+    const deploymentName = req.body.deploymentName;
+    const namespace = req.body.namespace;
 
-  if (!deploymentName || !namespace) {
-    return res.status(400).json({
-      error: "deploymentName and namespace are required",
-    });
-  }
+    if (!deploymentName || !namespace) {
+      return res.status(400).json({
+        error: "deploymentName and namespace are required",
+      });
+    }
 
-  const patchBody = {
-    spec: {
-      template: {
-        metadata: {
-          annotations: {
-            "kubectl.kubernetes.io/restartedAt": new Date().toISOString(),
+    const patchBody = {
+      spec: {
+        template: {
+          metadata: {
+            annotations: {
+              "kubectl.kubernetes.io/restartedAt": new Date().toISOString(),
+            },
           },
         },
       },
-    },
-  };
+    };
 
-  const response = await k8sApi.patchNamespacedDeployment(
-    deploymentName,
-    namespace,
-    patchBody
-  );
+    const response = await k8sApi.patchNamespacedDeployment(
+      deploymentName,
+      namespace,
+      patchBody
+    );
 
-  res.json(response.body);
+    res.json(response.body);
+  } catch (e) {
+    console.log(e as any);
+    res.status(500).json({
+      error: (e as Error).message,
+    });
+  }
 });
 
 if (!process.env.SECRET) {
