@@ -45,7 +45,17 @@ app.post("/rollout/restart", async (req, res) => {
     const response = await k8sApi.patchNamespacedDeployment(
       deploymentName,
       namespace,
-      patchBody
+      patchBody,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        headers: {
+          "Content-Type": "application/merge-patch+json",
+        },
+      }
     );
 
     res.json(response.body);
