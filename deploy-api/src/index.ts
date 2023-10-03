@@ -12,6 +12,13 @@ const k8sApi = kc.makeApiClient(k8s.AppsV1Api);
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  console.dir(req.headers, { depth: null });
+  res.json({
+    status: "OK",
+  });
+});
+
 app.post("/rollout/restart", async (req, res) => {
   try {
     const secret = req.headers.authorization;
